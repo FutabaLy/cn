@@ -5,7 +5,7 @@
 ## 关联项目
 
 - [408 可视化实验室 co](https://futabaly.github.io/co/)：408 课程交互式实验合集。[源码](https://github.com/FutabaLy/co)。
-- [数字编码实验室](https://futabaly.github.io/co/digital-encoding/)：NRZ、RZ、NRZI、曼彻斯特与差分曼彻斯特波形对比、逐位推导和读图练习。
+- [数据结构 DS](https://futabaly.github.io/ds/)：排序动画、AVL 旋转等交互式可视化实验。
 
 ## 项目索引
 
