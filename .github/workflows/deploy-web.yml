@@ -1,7 +1,7 @@
 name: 部署各项目网页实时版到 GitHub Pages
 
 # 一个仓库一个站点：根是门户页（按 projects.json 生成），每个项目挂在 dist/<项目目录>/ 下。
-# 所以以后新增片子只要加目录 + 在 projects.json 里加一条，URL 就是 /network/<项目目录>/。
+# 所以以后新增片子只要加目录 + 在 projects.json 里加一条，URL 就是 /cn/<项目目录>/。
 
 on:
   push:

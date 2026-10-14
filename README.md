@@ -1,28 +1,28 @@
-# network
+# CN
 
 计算机网络相关的教学 / 可视化项目合集（monorepo）。每个项目独立放在 `projects/<名字>/`，各有自己的 `package.json`、README 和校验脚本。
 
 ## 关联项目
 
-- [408 可视化实验室 co](https://futabaly.github.io/co/)：408 课程交互式实验合集。[源码](https://github.com/FutabaLy/co)。
-- [数据结构 DS](https://futabaly.github.io/ds/)：排序动画、AVL 旋转等交互式可视化实验。
+- [CO](https://futabaly.github.io/co/)：408 课程交互式实验合集。[源码](https://github.com/FutabaLy/co)。
+- [DS](https://futabaly.github.io/ds/)：排序动画、AVL 旋转等交互式可视化实验。
 
 ## 项目索引
 
 | 项目 | 内容 | 产物 | 怎么看 / 怎么跑 |
 |---|---|---|---|
-| [network-delay-mv](projects/network-delay-mv/) | **90 秒中文教学片**：带宽 / 发送时延 / 传播时延 / 时延带宽积 / 停止等待 / 滑动窗口与信道利用率。Remotion 逐帧渲染，1920×1080@60fps，含中文旁白与字幕（24 条） | [`network-delay.mp4`](projects/network-delay-mv/network-delay.mp4)（90.005 s / 11.1 MB）、在线观看 **https://futabaly.github.io/network/network-delay-mv/** | `cd projects/network-delay-mv && npm i && npm run narration && npm run render` |
+| [network-delay-mv](projects/network-delay-mv/) | **90 秒中文教学片**：带宽 / 发送时延 / 传播时延 / 时延带宽积 / 停止等待 / 滑动窗口与信道利用率。Remotion 逐帧渲染，1920×1080@60fps，含中文旁白与字幕（24 条） | [`network-delay.mp4`](projects/network-delay-mv/network-delay.mp4)（90.005 s / 11.1 MB）、在线观看 **https://futabaly.github.io/cn/network-delay-mv/** | `cd projects/network-delay-mv && npm i && npm run narration && npm run render` |
 
 ## 在线站点
 
 一个仓库只有一个 GitHub Pages 站点，所以**根地址是门户页，各项目挂在子路径**（以后加片子不会互相占位）。
 
-**URL 规则（固定约定）**：`https://futabaly.github.io/network/<项目目录>/` —— 由 `projects.json` 决定，加项目不用改构建脚本或工作流；门户页固定在根地址。
+**URL 规则（固定约定）**：`https://futabaly.github.io/cn/<项目目录>/` —— 由 `projects.json` 决定，加项目不用改构建脚本或工作流；门户页固定在根地址。
 
 | 地址 | 内容 |
 |---|---|
-| https://futabaly.github.io/network/ | 门户页：项目卡片索引（按 `projects.json` 生成） |
-| https://futabaly.github.io/network/network-delay-mv/ | 这个片子（浏览器实时渲染，带旁白与字幕） |
+| https://futabaly.github.io/cn/ | 门户页：项目卡片索引（按 `projects.json` 生成） |
+| https://futabaly.github.io/cn/network-delay-mv/ | 这个片子（浏览器实时渲染，带旁白与字幕） |
 
 ![门户页](docs/portal.png)
 
@@ -45,7 +45,7 @@ docs/portal.png           门户页截图（放在 README 里）
 1. `mkdir -p projects/<名字>`，把工程放进去（照着 `network-delay-mv` 的结构来）；
 2. 项目里至少要有 `README.md`（运行/导出说明）和 `npm run check`（类型检查 + 数值自检）；Vite 的 `base` 保持 `'./'`（相对路径），这样搬到子路径不用改代码；
 3. 在上面的**项目索引**表里加一行；
-4. 在 `projects.json` 里加一条 —— **门户页卡片和线上地址都由它生成**，URL 固定为 `https://futabaly.github.io/network/<项目目录>/`；不用动 `scripts/build-pages.mjs`，也不用改工作流；
+4. 在 `projects.json` 里加一条 —— **门户页卡片和线上地址都由它生成**，URL 固定为 `https://futabaly.github.io/cn/<项目目录>/`；不用动 `scripts/build-pages.mjs`，也不用改工作流；
 5. 把项目名加进 `.github/workflows/check.yml` 的 `matrix.project` 列表（一处，用于跑校验）；
 6. 成品（视频/图/文档）放项目根目录或 `docs/`；`node_modules/`、`out/`、`dist/` 这些中间产物别提交 —— 各项目的 `.gitignore` 已经写好了。
 
@@ -61,4 +61,4 @@ docs/portal.png           门户页截图（放在 README 里）
 ## CI
 
 `.github/workflows/check.yml` 对索引里的每个项目跑 `npm ci && npm run check`（类型检查 + 数值自检）与 `npm run web:build`，push / PR 都会触发。
-- `.github/workflows/deploy-web.yml`：改动 `projects/**` 或 `projects.json` 时，自动校验所有项目 → 逐个构建 → 组装门户页 + 子路径 → 发布到 GitHub Pages（**https://futabaly.github.io/network/**）。
+- `.github/workflows/deploy-web.yml`：改动 `projects/**` 或 `projects.json` 时，自动校验所有项目 → 逐个构建 → 组装门户页 + 子路径 → 发布到 GitHub Pages（**https://futabaly.github.io/cn/**）。
