@@ -2,6 +2,11 @@
 
 计算机网络相关的教学 / 可视化项目合集（monorepo）。每个项目独立放在 `projects/<名字>/`，各有自己的 `package.json`、README 和校验脚本。
 
+## 关联项目
+
+- [408 可视化实验室 co](https://futabaly.github.io/co/)：408 课程交互式实验合集。[源码](https://github.com/FutabaLy/co)。
+- [数字编码实验室](https://futabaly.github.io/co/digital-encoding/)：NRZ、RZ、NRZI、曼彻斯特与差分曼彻斯特波形对比、逐位推导和读图练习。
+
 ## 项目索引
 
 | 项目 | 内容 | 产物 | 怎么看 / 怎么跑 |
