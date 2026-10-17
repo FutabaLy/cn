@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>408计网考研：TCP 拥塞控制动态模拟器</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --accent: #f43f5e;
+      --warn: #f59e0b;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .control-val {
+      font-weight: 700;
+      color: var(--primary);
+      font-family: monospace;
+      font-size: 1rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .line-dash {
+      width: 18px;
+      height: 0;
+      border-top: 2px dashed var(--warn);
+      display: inline-block;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 360px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 10;
+      min-width: 210px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .tag-ss { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .tag-ca { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .tag-to { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+    .tag-fr { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    .btn-preset {
+      background: #334155;
+      color: var(--text);
+      border: 1px solid #475569;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-preset:hover {
+      background: var(--primary);
+      color: #0f172a;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>TCP 拥塞控制动态演进模拟器 <span class="badge">408 计网考点专版</span></h1>
+      <p style="font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+        直观演示慢开始（Slow Start）、拥塞避免（Congestion Avoidance）、超时重传与快恢复（Fast Recovery）
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-preset" onclick="applyPreset(16, 8, 13)">教材经典模型</button>
+      <button class="btn-preset" onclick="applyPreset(8, 5, 11)">早期超时模型</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- 左侧参数控制面板 -->
+    <div class="card">
+      <h3 style="font-size: 1rem; margin-bottom: 14px; border-left: 3px solid var(--primary); padding-left: 8px;">
+        参数调节面板
+      </h3>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span>初始门限 (ssthresh)</span>
+          <span class="control-val" id="val-ssthresh">16 MSS</span>
+        </div>
+        <input type="range" id="slider-ssthresh" min="4" max="24" step="2" value="16" />
+        <div class="hint">决定第一阶段慢开始指数增长在何处转为拥塞避免（线性+1）。</div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span>超时重传发生轮次 (Timeout)</span>
+          <span class="control-val" id="val-timeout" style="color: var(--accent);">第 8 轮末尾</span>
+        </div>
+        <input type="range" id="slider-timeout" min="3" max="11" step="1" value="8" />
+        <div class="hint">发生超时后：下一轮新 ssthresh = ⌊当前cwnd / 2⌋，且 <b>cwnd 瞬间重置为 1</b>。</div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span>3个冗余ACK轮次 (3-Dup-ACK)</span>
+          <span class="control-val" id="val-dup" style="color: var(--warn);">第 13 轮末尾</span>
+        </div>
+        <input type="range" id="slider-dup" min="9" max="15" step="1" value="13" />
+        <div class="hint">收到3个冗余ACK后：执行快恢复，<b>cwnd = 新 ssthresh = ⌊当前cwnd / 2⌋</b>，直接线性+1。</div>
+      </div>
+
+      <div style="margin-top: 20px; padding: 12px; background: rgba(15,23,42,0.6); border-radius: 8px; font-size: 0.8rem; color: var(--muted);">
+        <strong style="color: var(--text);">💡 408 审题口诀：</strong><br/>
+        • 掉回 1 必是<b>超时</b>（慢开始重启）<br/>
+        • 掉一半直接斜线上升必是<b>3个冗余ACK</b>（快恢复）<br/>
+        • 翻倍若超门限，必须在门限值处<b>踩刹车</b>！
+      </div>
+    </div>
+
+    <!-- 右侧动态折线图 -->
+    <div class="card">
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background: var(--primary);"></span> 拥塞窗口 (cwnd)</div>
+        <div class="legend-item"><span class="line-dash"></span> 慢开始门限 (ssthresh)</div>
+        <div class="legend-item"><span class="dot" style="background: var(--accent);"></span> 发生超时 (Timeout)</div>
+        <div class="legend-item"><span class="dot" style="background: var(--warn);"></span> 3个冗余ACK (快重传)</div>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="chartCanvas"></canvas>
+        <div id="tooltip"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部逐轮次推演表 -->
+  <div class="card">
+    <h3 style="font-size: 1rem; margin-bottom: 12px; border-left: 3px solid var(--primary); padding-left: 8px;">
+      各传输轮次（RTT）数值与算法状态推演表
+    </h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>传输轮次 (RTT)</th>
+            <th>拥塞窗口 cwnd (MSS)</th>
+            <th>慢开始门限 ssthresh (MSS)</th>
+            <th>当前执行阶段</th>
+            <th>本轮事件与计算依据（408大题采分点）</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sliderSsthresh = document.getElementById('slider-ssthresh');
+  const sliderTimeout = document.getElementById('slider-timeout');
+  const sliderDup = document.getElementById('slider-dup');
+
+  const valSsthresh = document.getElementById('val-ssthresh');
+  const valTimeout = document.getElementById('val-timeout');
+  const valDup = document.getElementById('val-dup');
+
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const tooltip = document.getElementById('tooltip');
+  const tableBody = document.getElementById('table-body');
+
+  let simulationData = [];
+  let pointCoords = [];
+
+  function calculateSimulation() {
+    let ssthresh = parseInt(sliderSsthresh.value, 10);
+    let timeoutRound = parseInt(sliderTimeout.value, 10);
+    let dupRound = parseInt(sliderDup.value, 10);
+
+    // 保证冗余ACK轮次在超时轮次之后，方便观察完整过程
+    if (dupRound <= timeoutRound) {
+      dupRound = timeoutRound + 2;
+      sliderDup.value = dupRound;
+    }
+
+    valSsthresh.textContent = `${ssthresh} MSS`;
+    valTimeout.textContent = `第 ${timeoutRound} 轮末尾`;
+    valDup.textContent = `第 ${dupRound} 轮末尾`;
+
+    const totalRounds = 16;
+    const data = [];
+    let cwnd = 1;
+
+    for (let r = 0; r <= totalRounds; r++) {
+      let phase = '';
+      let note = '';
+      let eventType = 'normal';
+
+      if (r === 0) {
+        cwnd = 1;
+        phase = '慢开始';
+        note = `连接刚建立，初始 cwnd = 1，初始门限 ssthresh = ${ssthresh}`;
+      } else {
+        const prevCwnd = data[r - 1].cwnd;
+        const prevSsthresh = data[r - 1].ssthresh;
+
+        if (r - 1 === timeoutRound) {
+          // 上一轮末尾发生超时
+          ssthresh = Math.max(2, Math.floor(prevCwnd / 2));
+          cwnd = 1;
+          phase = '超时重传 → 慢开始';
+          note = `第 ${r - 1} 轮末尾超时！新 ssthresh = ⌊${prevCwnd}/2⌋ = ${ssthresh}，cwnd 重置为 1`;
+        } else if (r - 1 === dupRound) {
+          // 上一轮末尾收到3个冗余ACK
+          ssthresh = Math.max(2, Math.floor(prevCwnd / 2));
+          cwnd = ssthresh;
+          phase = '快恢复 → 拥塞避免';
+          note = `第 ${r - 1} 轮末尾收到3个冗余ACK！新 ssthresh = cwnd = ⌊${prevCwnd}/2⌋ = ${ssthresh}`;
+        } else {
+          // 正常演进
+          if (prevCwnd < prevSsthresh) {
+            if (prevCwnd * 2 >= prevSsthresh) {
+              cwnd = prevSsthresh;
+              phase = '慢开始 (到达门限)';
+              note = `指数加倍受门限限制：min(${prevCwnd}×2, ${prevSsthresh}) = ${cwnd}，下轮转拥塞避免`;
+            } else {
+              cwnd = prevCwnd * 2;
+              phase = '慢开始';
+              note = `cwnd < ssthresh，指数加倍：${prevCwnd} × 2 = ${cwnd}`;
+            }
+          } else {
+            cwnd = prevCwnd + 1;
+            phase = '拥塞避免';
+            note = `cwnd ≥ ssthresh，线性加 1：${prevCwnd} + 1 = ${cwnd}`;
+          }
+        }
+      }
+
+      if (r === timeoutRound) {
+        eventType = 'timeout';
+      } else if (r === dupRound) {
+        eventType = 'dup';
+      }
+
+      data.push({
+        round: r,
+        cwnd,
+        ssthresh,
+        phase,
+        note,
+        eventType
+      });
+    }
+
+    simulationData = data;
+    renderTable();
+    drawChart();
+  }
+
+  function renderTable() {
+    tableBody.innerHTML = simulationData.map(item => {
+      let tagClass = 'tag-ss';
+      if (item.phase.includes('拥塞避免')) tagClass = 'tag-ca';
+      if (item.phase.includes('超时')) tagClass = 'tag-to';
+      if (item.phase.includes('快恢复')) tagClass = 'tag-fr';
+
+      let eventBadge = '';
+      if (item.eventType === 'timeout') {
+        eventBadge = ` <span class="tag tag-to">⚠️ 本轮末尾发生超时</span>`;
+      } else if (item.eventType === 'dup') {
+        eventBadge = ` <span class="tag tag-fr">⚡ 本轮末尾收到3个冗余ACK</span>`;
+      }
+
+      return `
+        <tr>
+          <td><strong>RTT ${item.round}</strong></td>
+          <td style="color: var(--primary); font-weight: 700;">${item.cwnd}</td>
+          <td style="color: var(--warn);">${item.ssthresh}</td>
+          <td><span class="tag ${tagClass}">${item.phase}</span></td>
+          <td style="text-align: left;">${item.note}${eventBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function drawChart() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+    const pad = { top: 24, right: 24, bottom: 42, left: 48 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const maxVal = Math.max(
+      26,
+      ...simulationData.map(d => Math.max(d.cwnd, d.ssthresh))
+    );
+    const maxY = Math.ceil(maxVal / 4) * 4;
+    const totalRounds = simulationData.length - 1;
+
+    const getX = r => pad.left + (r / totalRounds) * plotW;
+    const getY = v => pad.top + plotH - (v / maxY) * plotH;
+
+    // 1. 绘制背景网格与坐标轴
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+
+    const ySteps = 6;
+    for (let i = 0; i <= ySteps; i++) {
+      const val = Math.round((maxY / ySteps) * i);
+      const y = getY(val);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(width - pad.right, y);
+      ctx.stroke();
+      ctx.fillText(val, pad.left - 8, y + 4);
+    }
+
+    ctx.textAlign = 'center';
+    simulationData.forEach(d => {
+      const x = getX(d.round);
+      ctx.fillText(d.round, x, height - pad.bottom + 20);
+    });
+
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('传输轮次 (RTT)', pad.left + plotW / 2, height - 4);
+
+    // 2. 绘制 ssthresh 阶梯虚线
+    ctx.save();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    simulationData.forEach((d, idx) => {
+      const x = getX(d.round);
+      const y = getY(d.ssthresh);
+      if (idx === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        const prevY = getY(simulationData[idx - 1].ssthresh);
+        ctx.lineTo(x, prevY);
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. 绘制 cwnd 折线
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    simulationData.forEach((d, idx) => {
+      const x = getX(d.round);
+      const y = getY(d.cwnd);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // 4. 绘制数据点与事件高亮
+    pointCoords = [];
+    simulationData.forEach(d => {
+      const x = getX(d.round);
+      const y = getY(d.cwnd);
+      pointCoords.push({ x, y, data: d });
+
+      ctx.beginPath();
+      if (d.eventType === 'timeout') {
+        ctx.fillStyle = '#f43f5e';
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+      } else if (d.eventType === 'dup') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+      } else {
+        ctx.fillStyle = '#38bdf8';
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      }
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  }
+
+  // 鼠标悬停查看单点详情
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    let hit = null;
+    for (const pt of pointCoords) {
+      const dist = Math.hypot(mx - pt.x, my - pt.y);
+      if (dist < 16) {
+        hit = pt;
+        break;
+      }
+    }
+
+    if (hit) {
+      const d = hit.data;
+      tooltip.style.display = 'block';
+      let left = hit.x + 14;
+      if (left + 230 > rect.width) left = hit.x - 235;
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${Math.max(10, hit.y - 40)}px`;
+      tooltip.innerHTML = `
+        <div style="font-weight:700; color:var(--primary); margin-bottom:4px;">
+          第 ${d.round} 传输轮次 (RTT ${d.round})
+        </div>
+        <div>拥塞窗口 <b>cwnd</b>: ${d.cwnd} MSS</div>
+        <div>慢开始门限 <b>ssthresh</b>: ${d.ssthresh} MSS</div>
+        <div>阶段: <b>${d.phase}</b></div>
+        <div style="color:var(--muted); margin-top:4px; font-size:0.76rem;">${d.note}</div>
+      `;
+    } else {
+      tooltip.style.display = 'none';
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+  });
+
+  function applyPreset(s, t, d) {
+    sliderSsthresh.value = s;
+    sliderTimeout.value = t;
+    sliderDup.value = d;
+    calculateSimulation();
+  }
+
+  [sliderSsthresh, sliderTimeout, sliderDup].forEach(el => {
+    el.addEventListener('input', calculateSimulation);
+  });
+
+  window.addEventListener('resize', drawChart);
+  calculateSimulation();
+</script>
+</body>
+</html>
